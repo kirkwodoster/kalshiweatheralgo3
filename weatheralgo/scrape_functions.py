@@ -117,13 +117,15 @@ def permission_to_scrape(market, timezone, scraping_hours, expected_high_date):
         
 def date_temp_append(driver, url, timezone, dates):
     try:
+        
         scrape_data = scrape_temperature(driver=driver, url=url, timezone=timezone)
-        current_date = scrape_data[0]
-        current_temp = scrape_data[1]
-        if len(dates) == 0 or (len(dates) > 0 and dates[-1] != current_date):
-            return [current_date, current_temp]
-        else:
-            return False
+        if scrape_data:
+            current_date = scrape_data[0]
+            current_temp = scrape_data[1]
+            if len(dates) == 0 or (len(dates) > 0 and dates[-1] != current_date):
+                return [current_date, current_temp]
+            else:
+                return False
     except Exception as e:
         logging.error(f"Error in date_temp_append: {e}")
     
