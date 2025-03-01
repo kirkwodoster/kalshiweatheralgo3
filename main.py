@@ -6,9 +6,9 @@ import pytz
 from weatheralgo.model import weather_model
 from weatheralgo import util_functions
 from weatheralgo.input_variables import Input
-from weatheralgo import trade_functions
 from weatheralgo.clients import client
-
+from datetime import datetime, timedelta
+import pytz
 
 # from weatheralgo.clients import client
 
@@ -26,9 +26,7 @@ from weatheralgo.clients import client
 
 if __name__ == "__main__":
     
-
-
- 
+    
     input = Input()
     input.user_input_function()
 

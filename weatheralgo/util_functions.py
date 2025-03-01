@@ -3,7 +3,6 @@ import csv
 import logging
 from datetime import datetime
 import logging
-import random
 
 from weatheralgo.clients import client
 
@@ -115,7 +114,6 @@ def order_pipeline(highest_temp: int, market: str):
             for key, value in listofMarketsAdj.items():
                 if highest_temp == value:
                     tempMarket = key
-                
 
         if tempMarket:        
             return f'{event}-{tempMarket}'
@@ -128,22 +126,7 @@ def order_pipeline(highest_temp: int, market: str):
     except:
         None
 
-def trade_today(market, timezone):
 
-    try:
-        today = datetime.now(timezone)
-        todaysDate = today.strftime('%y%b%d').upper()
-        event = f'{market}-{todaysDate}'
-        orders = client.get_orders(event_ticker=event)['orders']
-        
-        if len(orders) >= 1:
-           
-            return True
-        else:
-            return False
-
-    except Exception as e:
-        logging.error(f"Error Trade Today: {e}")
 
 
 def order_filled(market):
@@ -175,22 +158,3 @@ def logging_settings():
     format="%(asctime)s - %(levelname)s - %(message)s",  # Define the log format
     handlers=[logging.StreamHandler()]  # Output logs to the terminal
 )
-
-def get_random_proxy():
-    path = 'util/proxy/proxy.txt'
-    with open(path, encoding='utf-8') as file:
-        lines = [address_fix(line.rstrip()) for line in file]
-        return random.choice(lines)
-
-
-def address_fix(address):
-    http = 'http://'
-    address_old = address.split(':')
-
-    ip = address_old[0]
-    port = address_old[1]
-    username = address_old[2]
-    password = address_old[3]
-
-    address_new = f'{http}{username}:{password}@{ip}:{port}'
-    return address_new

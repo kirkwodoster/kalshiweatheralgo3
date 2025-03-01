@@ -11,7 +11,7 @@ pytz
 pandas
 numpy
 uuid
-fake_useragent
+fake-useragent
 python-time
 random
 fake_useragent

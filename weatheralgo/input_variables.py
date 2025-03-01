@@ -46,7 +46,7 @@ class Input:
 
         self.city = None  # Initialize city
         self.LR_LENGTH = 5
-        self.SCRAPING_HOURS = (9,16)
+        self.SCRAPING_HOURS = (120,60)
         self.MINUTES_FROM_MAX = 15
         self.COUNT = 1
         self.YES_PRICE = 85
@@ -78,7 +78,7 @@ class Input:
 
                 while True: # Loop for scraping_hours input
                     try:
-                        self.SCRAPING_HOURS_STR = input("Scraping Hours (e.g., 8,17): ") #Get string input first
+                        self.SCRAPING_HOURS_STR = input("Scraping minutes from high of day hour eg. (120, 60): ") #Get string input first
                         self.SCRAPING_HOURS = tuple(map(int, self.SCRAPING_HOURS_STR.split(",")))
                         #Split and convert to tuple of ints
                         # print(f"Scraping Hours: {self.SCRAPING_HOURS}")
@@ -130,7 +130,7 @@ class Input:
         
 
         output = { 
-            'city': self.city,
+            # 'city': self.city,
             'market': self.market['SERIES'],
             'timezone':  pytz.timezone(self.market['TIMEZONE']),
             'url': self.market['URL'],

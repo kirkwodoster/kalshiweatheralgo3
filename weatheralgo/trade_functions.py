@@ -50,15 +50,14 @@ def if_temp_reaches_max(current_temp: int, market: str, yes_price: int, count: i
         logging.info(f'if_temp_reaches_max : {e}')
     
     
-def trade_criteria_met(temperatures: list, lr_length: int, timezone, xml_url: str, minutes_from_max: int, market: str):
+def trade_criteria_met(temperatures: list, lr_length: int, timezone,  expected_high_date: datetime, market: str, minutes_from_max):
     
     try:
         current_time = datetime.now(timezone)
-        minute_max_temp = scrape_functions.xml_scrape(xml_url, timezone)[0]
 
         #trade_range = (current_time >= hour_max_temp - minutes_from_max) and (current_time <= hour_max_temp + minutes_from_max)
-        trade_range = (current_time >= minute_max_temp - timedelta(minutes=minutes_from_max)) and \
-                      (current_time <= minute_max_temp + timedelta(minutes=minutes_from_max))
+        trade_range = (current_time >= expected_high_date - timedelta(minutes=minutes_from_max)) and \
+                      (current_time <=  expected_high_date + timedelta(minutes=minutes_from_max))
         
         length = len(temperatures) >= lr_length
         
@@ -76,8 +75,9 @@ def trade_criteria_met(temperatures: list, lr_length: int, timezone, xml_url: st
                 logging.info(f"Max Temp: {highest_temp}")
                 return True
             else:
-                False
+                return False
     except Exception as e:
         logging.error(f"Error in trade_criteria_met: {e}")
         
+    
     

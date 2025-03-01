@@ -2,10 +2,11 @@ import logging
 import numpy as np
 import pandas as pd
 from selenium.webdriver.common.by import By
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import xml.etree.ElementTree as ET
 import time
+from weatheralgo.clients import client
 
 
 
@@ -41,20 +42,6 @@ def scrape_temperature(driver, url, timezone) -> list[str]:
         logging.error(f"Error scrape_temperature: {e}")
         return None
 
-def begin_scrape(timezone, scraping_hours):
-    
-    try:
-        current_time = datetime.now(timezone).hour
-        
-        start_scrape = current_time >= scraping_hours[0]
-        end_scrape = current_time <= scraping_hours[1]
-
-        if start_scrape and end_scrape:
-            return True
-        else:
-            return False
-    except Exception as e:
-        logging.error(f"Error in begin_scrape: {e}")
 
 
 def xml_scrape(xml_url, timezone):
@@ -86,3 +73,58 @@ def xml_scrape(xml_url, timezone):
 
     except Exception as e:
       print(e)
+
+
+def trade_today(market, timezone):
+
+    try:
+        today = datetime.now(timezone)
+        todaysDate = today.strftime('%y%b%d').upper()
+        event = f'{market}-{todaysDate}'
+        orders = client.get_orders(event_ticker=event)['orders']
+        
+        if len(orders) >= 1:
+           
+            return True
+        else:
+            return False
+
+    except Exception as e:
+        logging.error(f"Error Trade Today: {e}")
+
+def begin_scrape(scraping_hours, expected_high_date, timezone):
+    
+    try:
+        today = datetime.now(timezone)
+        start_scrape = today >= expected_high_date - timedelta(minutes=scraping_hours[0])
+        end_scrape = today <= expected_high_date + timedelta(minutes=scraping_hours[1])
+
+
+        if start_scrape and end_scrape:
+            return True
+        else:
+            return False
+    except Exception as e:
+        logging.error(f"Error in begin_scrape: {e}")
+
+def permission_to_scrape(market, timezone, scraping_hours, expected_high_date):
+    
+    if not trade_today(market, timezone) and begin_scrape(scraping_hours, expected_high_date, timezone):
+        return True
+    else:
+        return False
+    
+        
+def date_temp_append(driver, url, timezone, dates):
+    try:
+        scrape_data = scrape_temperature(driver=driver, url=url, timezone=timezone)
+        current_date = scrape_data[0]
+        current_temp = scrape_data[1]
+        if len(dates) == 0 or (len(dates) > 0 and dates[-1] != current_date):
+            return [current_date, current_temp]
+        else:
+            return False
+    except Exception as e:
+        logging.error(f"Error in date_temp_append: {e}")
+    
+    
