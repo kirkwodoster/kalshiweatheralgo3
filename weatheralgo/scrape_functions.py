@@ -7,36 +7,25 @@ import requests
 import xml.etree.ElementTree as ET
 import time
 from weatheralgo.clients import client
-
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
     
-def scrape_temperature(driver, url, timezone) -> list[str]:
+def scrape_temperature(driver, url) -> list[str, float]:
     
     try:
         driver.get(url)
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'path[fill="#2caffe"]'))
+        )
+        path_elements = driver.find_elements(By.CSS_SELECTOR, 'path[fill="#2caffe"]')
 
-        time.sleep(20)  # Wait for the page to load
-        tbody = driver.find_element(By.XPATH, "//table[@id='OBS_DATA']/tbody")
-        first_row = tbody.find_elements(By.TAG_NAME, "tr")[0]
-        cells = first_row.find_elements(By.TAG_NAME, "td")
-        
-        current_denver_time = datetime.now(timezone)
-        denver_strip = datetime.strftime(current_denver_time, "%A").split(',')
-        denver_date = denver_strip[0]
+        datetemp_list = [path.get_attribute("aria-label") for path in path_elements]
+       
+        date = [', '.join(i.split(', ')[0:3]) for i in datetemp_list]
+        temp = [float(i.split(', ')[-1].split(' ')[0][:-1]) for i in datetemp_list]
     
-        date_scrape = [cell.text.strip() for cell in cells][:2][0]
-
-        date_scrape_format = datetime.strptime(date_scrape, '%b %d, %I:%M %p').strftime('%b %d, %I:%M %p')
-    
-        final_date = f'{denver_date}, {date_scrape_format},'
-
-        path_element = driver.find_element(By.CSS_SELECTOR, f'path[aria-label*="{final_date}"]')
-        aria_label = path_element.get_attribute('aria-label')
-        temp = float(aria_label.split(' ')[5][:-1])
-    
-
-        return [date_scrape, temp]  # Return date and temperature
+        return [date, temp]  # Return date and temperature
         
     except Exception as e:
         logging.error(f"Error scrape_temperature: {e}")
@@ -96,9 +85,9 @@ def begin_scrape(scraping_hours, expected_high_date, timezone):
     
     try:
         today = datetime.now(timezone)
+
         start_scrape = today >= expected_high_date - timedelta(minutes=scraping_hours[0])
         end_scrape = today <= expected_high_date + timedelta(minutes=scraping_hours[1])
-
 
         if start_scrape and end_scrape:
             return True
@@ -115,18 +104,5 @@ def permission_to_scrape(market, timezone, scraping_hours, expected_high_date):
         return False
     
         
-def date_temp_append(driver, url, timezone, dates):
-    try:
-        
-        scrape_data = scrape_temperature(driver=driver, url=url, timezone=timezone)
-        if scrape_data:
-            current_date = scrape_data[0]
-            current_temp = scrape_data[1]
-            if len(dates) == 0 or (len(dates) > 0 and dates[-1] != current_date):
-                return [current_date, current_temp]
-            else:
-                return False
-    except Exception as e:
-        logging.error(f"Error in date_temp_append: {e}")
-    
+
     

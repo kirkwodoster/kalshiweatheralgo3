@@ -126,9 +126,6 @@ def order_pipeline(highest_temp: int, market: str):
     except:
         None
 
-
-
-
 def order_filled(market):
     try:
         market_ticker = weather_config(market)

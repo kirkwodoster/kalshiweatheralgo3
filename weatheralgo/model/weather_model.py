@@ -3,7 +3,7 @@ import logging
 
 import time
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -54,73 +54,53 @@ def scrape_dynamic_table(driver, market, timezone, url, xml_url, lr_length, scra
            today = current_local_date
            expected_high_date = scrape_functions.xml_scrape(xml_url, timezone)[0]
             
-        permission_scrape = scrape_functions.permission_to_scrape(market=market, 
+        permission_scrape = scrape_functions.permission_to_scrape(
+                                                                  market=market, 
                                                                   timezone=timezone, 
                                                                   scraping_hours=scraping_hours, 
                                                                   expected_high_date=expected_high_date,
-                                                                 )
-        
-        datetemp_append = scrape_functions.date_temp_append(
-                                                            driver=driver, 
-                                                            url=url, 
-                                                            timezone=timezone, 
-                                                            dates=dates
-            
-                                                            )
-        
-        trade_made_today = scrape_functions.trade_today(
-                                                        market=market,
-                                                        timezone=timezone
-                                                        )
-        
+                                                                  )
+        scrape = scrape_functions.scrape_temperature(driver=driver, url=url)
 
         time.sleep(rand)
         try:
-            if permission_scrape and datetemp_append:
-             
-                current_date = datetemp_append[0]
-                current_temp = datetemp_append[1]
+
+            if permission_scrape:
+                current_temp = scrape[1][-1]
+                temperatures = scrape[1]
+
                 
-                dates.append(current_date)
-                temperatures.append(current_temp)
+                current_temp_is_max = trade_functions.if_temp_reaches_max(
+                                                                          current_temp=current_temp, 
+                                                                          market = market, 
+                                                                          yes_price=yes_price,
+                                                                          count=count,
+                                                                          balance_min=balance_min,
+                                                                          temperatures=temperatures,
+                                                                         )
                 
-                logging.info(f"Date: {dates}")
-                logging.info(f"Temperature: {temperatures}")
-                
-                current_temp_is_max = trade_functions.if_temp_reaches_max(current_temp=current_temp, 
-                                                                            market = market, 
-                                                                            yes_price=yes_price,
-                                                                            count=count,
-                                                                            balance_min=balance_min)
-                
-                trade_criteria = trade_functions.trade_criteria_met(temperatures=temperatures, 
-                                                    lr_length=lr_length,
-                                                    timezone=timezone,
-                                                    expected_high_date=expected_high_date, 
-                                                    minutes_from_max= minutes_from_max,
-                                                    market=market)
-                
-                trade_execute = trade_functions.trade_execution(temperatures=temperatures,
-                                                    market=market,
-                                                    yes_price=yes_price,
-                                                    count=count, 
-                                                    balance_min=balance_min)
+                trade_criteria = trade_functions.trade_criteria_met(
+                                                                    temperatures=temperatures, 
+                                                                    lr_length=lr_length,
+                                                                    timezone=timezone,
+                                                                    expected_high_date=expected_high_date, 
+                                                                    minutes_from_max= minutes_from_max,
+                                                                    market=market,
+                                                                    balance_min=balance_min,
+                                                                    yes_price=yes_price,
+                                                                    count=count
+                                                                    )
+
+
+ 
                 if current_temp_is_max:
                     logging.info('Max Temperature Reached')
 
-
                 if trade_criteria:
                     logging.info('Trade Criteria Met')
-
-                    if trade_execute:
-                        logging.info('Order Exectured')
-                  
+                 
                 else:
                     time.sleep(rand)
-                   
-            elif trade_made_today:
-                temperatures = []
-                dates = []
                 
                 is_order_filled = util_functions.order_filled(market)
                 if is_order_filled:
